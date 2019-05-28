@@ -1,0 +1,105 @@
+
+/** @test */
+public function theFormPageShowsTheCorrectCtaText()
+{
+    $response = $this->get('/');
+
+    $response->assertSee("Please give us your information");
+}
+
+
+
+/** @test */
+public function theFormHasTheCorrectInputFields()
+{
+    $response = $this->get("/");
+    $response->assertSee("First Name");
+    $response->assertSee("Last Name");
+    $response->assertSee("Primary Email Address");
+    $response->assertSee("Phone Number");
+}
+
+
+
+
+
+
+/**
+* @test
+* @expectedException Illuminate\Validation\ValidationException
+* */
+public function aValidationExceptionIsThrownWhenTheIncorrectPdataIsPosted()
+{
+    $this->withoutExceptionHandling();
+    $response = $this->post("/process", []);
+}
+
+
+
+/** @test */
+public function theCorrectValidationErrorMessagesAreShown()
+{
+    $this->followingRedirects();
+    $response = $this->post("/process", []);
+
+    $response->assertSee("The first name field is required.");
+    $response->assertSee("The last name field is required.");
+    $response->assertSee("The email address field is required.");
+}
+
+
+
+
+
+/** @test */
+public function whenAUserSubmitsTheFormCorrectlyTheyAreShownTheCorrectMessage()
+{
+    $this->followingRedirects();
+    $response = $this->post("process", [
+        "firstName" => "test",
+        "lastName" => "test",
+        "emailAddress" => "test",
+    ]);
+
+    $response->assertSee("Thank you so much! Someone will reach out to you soon.");
+}
+
+
+
+
+<logging>
+    <log type="coverage-html" target="./report"
+        lowUpperBound="50" highLowerBound="80" />
+</logging>
+
+
+
+/** @test */
+public function whenAUserFillsOutTheFormTheFormSubmissionNotificationEmailIsSent()
+{
+    $this->withoutExceptionHandling();
+    Mail::fake();
+    Mail::assertNothingSent();
+
+    // send the from submission
+    $info = [
+        "firstName" => "test",
+        "lastName" => "test",
+        "emailAddress" => "test",
+    ];
+    $this->post("process", $info);
+
+    Mail::assertSent(NewLeadNotification::class, function ($mail) use ($info) {
+        $mail->build();
+
+        return $mail->hasTo("staff@company.com") &&
+            $mail->viewData['firstName'] === $info['firstName'] &&
+            $mail->viewData['lastName'] === $info['lastName'] &&
+            $mail->viewData['emailAddress'] === $info['emailAddress'];
+    });
+}
+
+
+
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
