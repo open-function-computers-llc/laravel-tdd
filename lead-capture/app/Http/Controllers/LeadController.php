@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Mail\NewLeadNotification;
 use Mail;
+use App\Submission;
 
 class LeadController extends Controller
 {
@@ -17,6 +18,15 @@ class LeadController extends Controller
         ]);
 
         try {
+            $submission = new Submission;
+            // quite verbose, probably a different (*cough cough*, better) way to do this...
+            $submission->first_name = $request->get('firstName');
+            $submission->last_name = $request->get('lastName');
+            $submission->email_address = $request->get('emailAddress');
+            $submission->phone_number = $request->get('phoneNumber');
+            $submission->save();
+
+            // this mail action would be a great thing to add to a Model event listener...
             Mail::to("staff@company.com")->send(new NewLeadNotification([
                 'firstName' => $request->get('firstName'),
                 'lastName' => $request->get('lastName'),

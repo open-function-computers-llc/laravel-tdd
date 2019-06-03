@@ -10,6 +10,8 @@ use App\Mail\NewLeadNotification;
 
 class FormTest extends TestCase
 {
+    use RefreshDatabase;
+
     /** @test */
     public function theFormPageShowsTheCorrectCtaText()
     {
@@ -85,5 +87,23 @@ class FormTest extends TestCase
                 $mail->data['lastName'] === $info['lastName'] &&
                 $mail->data['emailAddress'] === $info['emailAddress'];
         });
+    }
+
+    /** @test */
+    public function whenWeCreateANewSubmissionViaTheFormItIsShownOnTheSubmissionsLandingPage()
+    {
+        Mail::fake();
+        $this->post("process", [
+            "firstName" => "FirstName",
+            "lastName" => "LastName",
+            "emailAddress" => "test@example.com",
+            "phoneNumber" => "555-123-4567",
+        ]);
+
+        $response = $this->get("/submissions");
+        $response->assertSee("FirstName");
+        $response->assertSee("LastName");
+        $response->assertSee("test@example.com");
+        $response->assertSee("555-123-4567");
     }
 }

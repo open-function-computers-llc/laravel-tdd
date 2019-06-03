@@ -33,7 +33,7 @@ class FormTest extends DuskTestCase
 
             $browser->type("firstName", "Kurtis")
                 ->type("lastName", "Holsapple")
-                ->type("emailAddress", "kurtis@example.com")
+                ->type("emailAddress", "kurtis@openfunctioncomputers.com")
                 ->press("Sign Up");
 
             $browser->visit("http://localhost:1080")
